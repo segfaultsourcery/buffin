@@ -1,4 +1,4 @@
-use crate::{BufferBuilder, FromBytes, ToBytes};
+use crate::{Buffin, FromBytes, ToBytes};
 use eyre::{Result, bail};
 use nom::{
     IResult, Parser,
@@ -12,7 +12,7 @@ use std::{ops::RangeInclusive, path::PathBuf};
 
 impl ToBytes for String {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         buffer.add(&(self.bytes().len() as u32))?;
         buffer.add_bytes(self.as_bytes())?;
@@ -23,7 +23,7 @@ impl ToBytes for String {
 
 impl ToBytes for &String {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         buffer.add(&(self.bytes().len() as u32))?;
         buffer.add_bytes(self.as_bytes())?;
@@ -48,7 +48,7 @@ impl FromBytes for String {
 
 impl ToBytes for &[u8] {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         buffer.add(&(self.len() as u32))?;
         buffer.add_bytes(self)?;
@@ -59,7 +59,7 @@ impl ToBytes for &[u8] {
 
 impl ToBytes for Vec<u8> {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         buffer.add(&(self.len() as u32))?;
         buffer.add_bytes(self)?;
@@ -70,7 +70,7 @@ impl ToBytes for Vec<u8> {
 
 impl ToBytes for &Vec<u8> {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         buffer.add(&(self.len() as u32))?;
         buffer.add_bytes(self)?;
@@ -90,7 +90,7 @@ impl FromBytes for Vec<u8> {
 
 impl ToBytes for u32 {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
         buffer.add_bytes(&self.to_le_bytes())?;
         Ok(buffer.len())
     }
@@ -104,7 +104,7 @@ impl FromBytes for u32 {
 
 impl ToBytes for u64 {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
         buffer.add_bytes(&self.to_le_bytes())?;
         Ok(buffer.len())
     }
@@ -118,7 +118,7 @@ impl FromBytes for u64 {
 
 impl ToBytes for u16 {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
         buffer.add_bytes(&self.to_le_bytes())?;
         Ok(buffer.len())
     }
@@ -138,7 +138,7 @@ where
     T: ToBytes,
 {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         buffer.add(&(self.len() as u32))?;
         for item in self.iter() {
@@ -189,7 +189,7 @@ where
 
 impl<T: ToBytes> ToBytes for RangeInclusive<T> {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         buffer.add(self.start())?;
         buffer.add(self.end())?;
@@ -208,7 +208,7 @@ impl<T: FromBytes> FromBytes for RangeInclusive<T> {
 
 impl<T: ToBytes> ToBytes for Option<T> {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         match self {
             Some(item) => {
@@ -236,7 +236,7 @@ impl<T: FromBytes> FromBytes for Option<T> {
 
 impl ToBytes for PathBuf {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = BufferBuilder::new(buffer);
+        let mut buffer = Buffin::new(buffer);
 
         let path = match self.to_str() {
             Some(p) => p.to_string(),

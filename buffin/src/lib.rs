@@ -6,13 +6,13 @@ use tracing::warn;
 
 pub mod basic_types;
 
-pub struct BufferBuilder<'a> {
+pub struct Buffin<'a> {
     buffer: &'a mut [u8],
     pos: usize,
 }
 
 #[allow(clippy::result_unit_err)]
-impl<'a> BufferBuilder<'a> {
+impl<'a> Buffin<'a> {
     pub fn new(buffer: &'a mut [u8]) -> Self {
         Self { buffer, pos: 0 }
     }

@@ -64,7 +64,7 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
             let expanded = quote! {
                 impl buffer_builder::ToBytes for #name {
                     fn to_bytes(&self, buffer: &mut [u8]) -> eyre::Result<usize> {
-                        let mut buffer = BufferBuilder::new(buffer);
+                        let mut buffer = Buffin::new(buffer);
                         #add_type_tag
                         #( #fields )*
                         Ok(buffer.len())
@@ -162,7 +162,7 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
             let expanded = quote! {
                 impl buffer_builder::ToBytes for #name {
                     fn to_bytes(&self, buffer: &mut [u8]) -> eyre::Result<usize> {
-                        let mut buffer = BufferBuilder::new(buffer);
+                        let mut buffer = Buffin::new(buffer);
                         #add_type_tag
                         match &self {
                             #( #variant_branches )*
