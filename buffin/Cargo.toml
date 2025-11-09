@@ -3,6 +3,16 @@ name = "buffin"
 version = "0.1.0"
 edition = "2024"
 
+authors = ["Kim H <buffin-contact@proton.me>"]
+categories = ["serialization"]
+description = "Buffin serialization to/from a binary buffer"
+homepage = "https://github.com/segfaultsourcery/buffin"
+keywords = ["serialization"]
+license = "MIT OR Apache-2.0"
+readme = "crates-io.md"
+repository = "https://github.com/segfaultsourcery/buffin"
+rust-version = "1.85"
+
 [dependencies]
 eyre.workspace = true
 nom.workspace = true
