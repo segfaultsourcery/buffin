@@ -1,6 +1,6 @@
 [package]
 name = "buffin_derive"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 
 authors = ["Kim H <buffin-contact@proton.me>"]
@@ -20,5 +20,5 @@ proc-macro = true
 quote = "1.0.41"
 syn = "2.0.108"
 
-buffin = { version = "0.1.0", path = "../buffin"}
+buffin = { version = "0.1.2", path = "../buffin"}
 proc-macro2 = "1.0.103"
