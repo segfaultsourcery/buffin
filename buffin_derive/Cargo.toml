@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 authors = ["Kim H <buffin-contact@proton.me>"]
-categories = ["serialization"]
+categories = ["encoding"]
 description = "Buffin serialization to/from a binary buffer"
 homepage = "https://github.com/segfaultsourcery/buffin"
 keywords = ["serialization"]
