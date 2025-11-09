@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{ToTokens, quote};
-use syn::{DeriveInput, Expr, ExprLit, Lit, Meta, parse_macro_input};
+use syn::{DeriveInput, Expr, ExprLit, Lit, Meta, parse_macro_input, spanned::Spanned};
 
 #[proc_macro_derive(ToBytes, attributes(tag))]
 pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
@@ -45,7 +45,7 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
         }
     }
 
-    let add_type_tag = match type_tag_value {
+    let add_type_tag = match &type_tag_value {
         Some(tag) => quote! {
             buffer.add_bytes(#tag.as_bytes())?;
         },
@@ -54,21 +54,60 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
 
     match input.data {
         syn::Data::Struct(data_struct) => {
-            let fields = data_struct.fields.into_iter().map(|field| {
-                let field_name = field.ident.clone().unwrap();
-                quote! {
-                    buffer.add(&self.#field_name)?;
-                }
-            });
+            let expanded = match data_struct.fields {
+                syn::Fields::Named(fields_named) => {
+                    let fields = fields_named.named.into_iter().map(|field| {
+                        let field_name =
+                            field
+                                .ident
+                                .clone()
+                                .expect(&format!("{}:{}", file!(), line!()));
+                        quote! {
+                            buffer.add(&self.#field_name)?;
+                        }
+                    });
 
-            let expanded = quote! {
-                impl buffin::ToBytes for #name {
-                    fn to_bytes(&self, buffer: &mut [u8]) -> eyre::Result<usize> {
-                        let mut buffer = Buffin::new(buffer);
-                        #add_type_tag
-                        #( #fields )*
-                        Ok(buffer.len())
+                    quote! {
+                        impl buffin::ToBytes for #name {
+                            fn to_bytes(&self, buffer: &mut [u8]) -> eyre::Result<usize> {
+                                let mut buffer = Buffin::new(buffer);
+                                #add_type_tag
+                                #( #fields )*
+                                Ok(buffer.len())
+                            }
+                        }
                     }
+                }
+                syn::Fields::Unnamed(fields_unnamed) => {
+                    let field_bindings: Vec<_> = (0..fields_unnamed.unnamed.len())
+                        .map(|i| syn::Ident::new(&format!("f{i}"), fields_unnamed.span()))
+                        .collect();
+
+                    let field_adds = field_bindings.iter().map(|binding| {
+                        quote! {
+                            buffer.add(#binding)?;
+                        }
+                    });
+
+                    quote! {
+                        impl buffin::ToBytes for #name {
+                            fn to_bytes(&self, buffer: &mut [u8]) -> eyre::Result<usize> {
+                                let mut buffer = Buffin::new(buffer);
+                                #add_type_tag
+
+                                let Self ( #( #field_bindings ),* ) = self;
+
+                                #( #field_adds )*
+                                Ok(buffer.len())
+                            }
+                        }
+                    }
+                }
+                syn::Fields::Unit => {
+                    if type_tag_value.is_none() {
+                        panic!("unit structs must have a tag")
+                    }
+                    add_type_tag
                 }
             };
 
@@ -139,7 +178,7 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
                         let field_idents: Vec<_> = fields_named
                             .named
                             .iter()
-                            .map(|f| f.ident.as_ref().unwrap())
+                            .map(|f| f.ident.as_ref().expect(&format!("{}:{}", file!(), line!())))
                             .collect();
 
                         let field_adds = field_idents.iter().map(|binding| {
@@ -226,7 +265,7 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
         }
     }
 
-    let get_type_tag = match type_tag_value {
+    let get_type_tag = match &type_tag_value {
         Some(tag) => quote! {
             let (buffer, _) = nom::bytes::streaming::tag(#tag.as_bytes())(buffer)?;
         },
@@ -235,30 +274,74 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
 
     match input.data {
         syn::Data::Struct(data_struct) => {
-            let field_names = data_struct
-                .fields
-                .iter()
-                .map(|field| field.ident.clone().unwrap());
+            let expanded = match data_struct.fields {
+                syn::Fields::Named(fields_named) => {
+                    let field_names = fields_named.named.iter().map(|field| {
+                        field
+                            .ident
+                            .clone()
+                            .expect(&format!("{}:{}", file!(), line!()))
+                    });
 
-            let fields = data_struct.fields.iter().map(|field| {
-                // HERE
+                    let fields = fields_named.named.iter().map(|field| {
+                        let field_name =
+                            field
+                                .ident
+                                .as_ref()
+                                .expect(&format!("{}:{}", file!(), line!()));
+                        let ty = &field.ty;
+                        let ty_tokens = ty.to_token_stream();
 
-                let field_name = field.ident.as_ref().unwrap();
-                let ty = &field.ty;
-                let ty_tokens = ty.to_token_stream();
+                        quote! {
+                            let (buffer, #field_name) = <#ty_tokens>::from_bytes(buffer)?;
+                        }
+                    });
 
-                quote! {
-                    let (buffer, #field_name) = <#ty_tokens>::from_bytes(buffer)?;
-                }
-            });
-
-            let expanded = quote! {
-                impl buffin::FromBytes for #name {
-                    fn from_bytes(buffer: &[u8]) -> nom::IResult<&[u8], Self> {
-                        #get_type_tag
-                        #( #fields )*
-                        Ok(( buffer, Self { #( #field_names ),* }))
+                    quote! {
+                        impl buffin::FromBytes for #name {
+                            fn from_bytes(buffer: &[u8]) -> nom::IResult<&[u8], Self> {
+                                #get_type_tag
+                                #( #fields )*
+                                Ok(( buffer, Self { #( #field_names ),* }))
+                            }
+                        }
                     }
+                }
+                syn::Fields::Unnamed(fields_unnamed) => {
+                    let field_bindings: Vec<_> = (0..fields_unnamed.unnamed.len())
+                        .map(|i| syn::Ident::new(&format!("f{i}"), fields_unnamed.span()))
+                        .collect();
+
+                    let field_types: Vec<_> =
+                        fields_unnamed.unnamed.iter().map(|f| &f.ty).collect();
+
+                    let fields = field_types.into_iter().zip(&field_bindings).map(
+                        |(field, field_binding)| {
+                            let ty_tokens = field.to_token_stream();
+
+                            // quote! { <#ty_tokens>::from_bytes }
+
+                            quote! {
+                                let (buffer, #field_binding) = <#ty_tokens>::from_bytes(buffer)?;
+                            }
+                        },
+                    );
+
+                    quote! {
+                        impl buffin::FromBytes for #name {
+                            fn from_bytes(buffer: &[u8]) -> nom::IResult<&[u8], Self> {
+                                #get_type_tag
+                                #( #fields )*
+                                Ok(( buffer, Self ( #( #field_bindings ),* )))
+                            }
+                        }
+                    }
+                }
+                syn::Fields::Unit => {
+                    if type_tag_value.is_none() {
+                        panic!("unit structs must have a tag")
+                    }
+                    get_type_tag
                 }
             };
 
@@ -335,7 +418,7 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
                         let field_idents: Vec<_> = fields_named
                             .named
                             .iter()
-                            .map(|f| f.ident.as_ref().unwrap())
+                            .map(|f| f.ident.as_ref().expect(&format!("{}:{}", file!(), line!())))
                             .collect();
 
                         let field_types: Vec<_> = fields_named.named.iter().map(|f| &f.ty).collect();
