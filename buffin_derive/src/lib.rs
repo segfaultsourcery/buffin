@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{ToTokens, quote};
+use quote::{ToTokens, quote, quote_spanned};
 use syn::{DeriveInput, Expr, ExprLit, Lit, Meta, parse_macro_input, spanned::Spanned};
 
 #[proc_macro_derive(ToBytes, attributes(tag))]
@@ -103,11 +103,22 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
                         }
                     }
                 }
-                syn::Fields::Unit => {
+                unit @ syn::Fields::Unit => {
                     if type_tag_value.is_none() {
-                        panic!("unit structs must have a tag")
+                        quote_spanned! {
+                            unit.span() => compile_error!("unit structs must have a tag")
+                        };
                     }
-                    add_type_tag
+
+                    quote! {
+                        impl buffin::ToBytes for #name {
+                            fn to_bytes(&self, buffer: &mut [u8]) -> eyre::Result<usize> {
+                                let mut buffer = Buffin::new(buffer);
+                                #add_type_tag
+                                Ok(buffer.len())
+                            }
+                        }
+                    }
                 }
             };
 
@@ -307,6 +318,8 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
                     }
                 }
                 syn::Fields::Unnamed(fields_unnamed) => {
+                    // TODO: Require tag if there are no fields!
+
                     let field_bindings: Vec<_> = (0..fields_unnamed.unnamed.len())
                         .map(|i| syn::Ident::new(&format!("f{i}"), fields_unnamed.span()))
                         .collect();
@@ -333,11 +346,21 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
                         }
                     }
                 }
-                syn::Fields::Unit => {
+                unit @ syn::Fields::Unit => {
                     if type_tag_value.is_none() {
-                        panic!("unit structs must have a tag")
+                        quote_spanned! {
+                            unit.span() => compile_error!("unit structs must have a tag")
+                        };
                     }
-                    get_type_tag
+
+                    quote! {
+                        impl buffin::FromBytes for #name {
+                            fn from_bytes(buffer: &[u8]) -> nom::IResult<&[u8], Self> {
+                                #get_type_tag
+                                Ok(( buffer, Self ))
+                            }
+                        }
+                    }
                 }
             };
 
@@ -390,6 +413,8 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
                         });
                     }
                     syn::Fields::Unnamed(fields_unnamed) => {
+                        // TODO: Require tag if there are no fields!
+
                         let field_bindings: Vec<_> = (0..fields_unnamed.unnamed.len())
                             .map(|i| syn::Ident::new(&format!("f{i}"), variant_ident.span()))
                             .collect();
