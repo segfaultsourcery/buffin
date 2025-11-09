@@ -1,5 +1,6 @@
-use std::any::type_name;
+#![cfg_attr(feature = "no_std", no_std)]
 
+use core::any::type_name;
 use eyre::{Result, bail};
 use nom::IResult;
 use tracing::warn;

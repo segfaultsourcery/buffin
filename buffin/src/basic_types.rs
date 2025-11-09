@@ -1,15 +1,29 @@
 use crate::{Buffin, FromBytes, ToBytes};
-use eyre::{Result, bail};
+use eyre::Result;
 use nom::{
     IResult, Parser,
     branch::alt,
-    bytes::{streaming::take, tag},
+    bytes::tag,
     combinator::map,
-    error::{Error, ErrorKind},
     number::streaming::{le_u16, le_u32, le_u64},
 };
+
+#[cfg(not(feature = "no_std"))]
+use eyre::bail;
+
+#[cfg(not(feature = "no_std"))]
+use nom::{
+    bytes::streaming::take,
+    error::{Error, ErrorKind},
+};
+
+#[cfg(not(feature = "no_std"))]
 use std::{ops::RangeInclusive, path::PathBuf};
 
+#[cfg(feature = "no_std")]
+use core::ops::RangeInclusive;
+
+#[cfg(not(feature = "no_std"))]
 impl ToBytes for String {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
         let mut buffer = Buffin::new(buffer);
@@ -21,6 +35,7 @@ impl ToBytes for String {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl ToBytes for &String {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
         let mut buffer = Buffin::new(buffer);
@@ -32,6 +47,7 @@ impl ToBytes for &String {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl FromBytes for String {
     fn from_bytes(buffer: &[u8]) -> IResult<&[u8], Self> {
         let (buffer, len) = le_u32(buffer)?;
@@ -57,6 +73,7 @@ impl ToBytes for &[u8] {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl ToBytes for Vec<u8> {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
         let mut buffer = Buffin::new(buffer);
@@ -68,6 +85,7 @@ impl ToBytes for Vec<u8> {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl ToBytes for &Vec<u8> {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
         let mut buffer = Buffin::new(buffer);
@@ -79,6 +97,7 @@ impl ToBytes for &Vec<u8> {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl FromBytes for Vec<u8> {
     fn from_bytes(buffer: &[u8]) -> IResult<&[u8], Self> {
         let (buffer, len) = le_u32(buffer)?;
@@ -149,6 +168,7 @@ where
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl<T> ToBytes for Vec<T>
 where
     T: ToBytes,
@@ -158,6 +178,7 @@ where
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl<T> ToBytes for &Vec<T>
 where
     T: ToBytes,
@@ -167,6 +188,7 @@ where
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl<T> FromBytes for Vec<T>
 where
     T: FromBytes,
@@ -234,6 +256,7 @@ impl<T: FromBytes> FromBytes for Option<T> {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl ToBytes for PathBuf {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
         let mut buffer = Buffin::new(buffer);
@@ -248,6 +271,7 @@ impl ToBytes for PathBuf {
     }
 }
 
+#[cfg(not(feature = "no_std"))]
 impl FromBytes for PathBuf {
     fn from_bytes(buffer: &[u8]) -> IResult<&[u8], Self> {
         let (buffer, path) = String::from_bytes(buffer)?;

@@ -62,7 +62,7 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
             });
 
             let expanded = quote! {
-                impl buffer_builder::ToBytes for #name {
+                impl buffin::ToBytes for #name {
                     fn to_bytes(&self, buffer: &mut [u8]) -> eyre::Result<usize> {
                         let mut buffer = Buffin::new(buffer);
                         #add_type_tag
@@ -160,7 +160,7 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
             });
 
             let expanded = quote! {
-                impl buffer_builder::ToBytes for #name {
+                impl buffin::ToBytes for #name {
                     fn to_bytes(&self, buffer: &mut [u8]) -> eyre::Result<usize> {
                         let mut buffer = Buffin::new(buffer);
                         #add_type_tag
@@ -253,7 +253,7 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
             });
 
             let expanded = quote! {
-                impl buffer_builder::FromBytes for #name {
+                impl buffin::FromBytes for #name {
                     fn from_bytes(buffer: &[u8]) -> nom::IResult<&[u8], Self> {
                         #get_type_tag
                         #( #fields )*
@@ -357,7 +357,7 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
             });
 
             let expanded = quote! {
-                impl buffer_builder::FromBytes for #name {
+                impl buffin::FromBytes for #name {
                     fn from_bytes(buffer: &[u8]) -> nom::IResult<&[u8], Self> {
                         use nom::{Parser, branch::alt, combinator::map, bytes::complete::tag};
                         #get_type_tag

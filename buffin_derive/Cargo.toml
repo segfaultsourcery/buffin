@@ -1,10 +1,10 @@
 [package]
 name = "buffin_derive"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 authors = ["Kim H <buffin-contact@proton.me>"]
-categories = ["encoding"]
+categories = ["encoding", "no_std"]
 description = "Buffin serialization to/from a binary buffer"
 homepage = "https://github.com/segfaultsourcery/buffin"
 keywords = ["serialization"]
