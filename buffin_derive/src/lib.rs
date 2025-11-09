@@ -317,9 +317,6 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
                     let fields = field_types.into_iter().zip(&field_bindings).map(
                         |(field, field_binding)| {
                             let ty_tokens = field.to_token_stream();
-
-                            // quote! { <#ty_tokens>::from_bytes }
-
                             quote! {
                                 let (buffer, #field_binding) = <#ty_tokens>::from_bytes(buffer)?;
                             }
@@ -400,7 +397,6 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
                         let field_types: Vec<_> = fields_unnamed.unnamed.iter().map(|f| &f.ty).collect();
 
                         let fields = field_types.into_iter().map(|field| {
-                            // HERE
                             let ty_tokens = field.to_token_stream();
                             quote! { <#ty_tokens>::from_bytes }
                         });
@@ -423,7 +419,6 @@ pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
                         let field_types: Vec<_> = fields_named.named.iter().map(|f| &f.ty).collect();
 
                         let fields = field_types.into_iter().map(|field| {
-                            // HERE
                             let ty_tokens = field.to_token_stream();
                             quote! { <#ty_tokens>::from_bytes }
                         });
