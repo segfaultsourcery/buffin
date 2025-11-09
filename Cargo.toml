@@ -1,0 +1,19 @@
+[workspace]
+members = [
+    "buffin",
+    "buffin_derive"
+]
+resolver = "2"
+
+[patch.crates-io]
+buffin.path = "buffin"
+buffin_derive.path = "buffin_derive"
+
+[workspace.dependencies]
+quote = "1.0.41"
+syn = "2.0.108"
+proc-macro2 = "1.0.103"
+
+eyre = "0.6.12"
+nom = "8.0.0"
+tracing = "0.1.41"
