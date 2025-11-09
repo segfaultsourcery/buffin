@@ -5,7 +5,7 @@ use nom::{
     branch::alt,
     bytes::tag,
     combinator::map,
-    number::streaming::{le_u16, le_u32, le_u64},
+    number::streaming::{le_u8, le_u16, le_u32, le_u64},
 };
 
 #[cfg(not(feature = "no_std"))]
@@ -62,51 +62,6 @@ impl FromBytes for String {
     }
 }
 
-impl ToBytes for &[u8] {
-    fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = Buffin::new(buffer);
-
-        buffer.add(&(self.len() as u32))?;
-        buffer.add_bytes(self)?;
-
-        Ok(buffer.len())
-    }
-}
-
-#[cfg(not(feature = "no_std"))]
-impl ToBytes for Vec<u8> {
-    fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = Buffin::new(buffer);
-
-        buffer.add(&(self.len() as u32))?;
-        buffer.add_bytes(self)?;
-
-        Ok(buffer.len())
-    }
-}
-
-#[cfg(not(feature = "no_std"))]
-impl ToBytes for &Vec<u8> {
-    fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
-        let mut buffer = Buffin::new(buffer);
-
-        buffer.add(&(self.len() as u32))?;
-        buffer.add_bytes(self)?;
-
-        Ok(buffer.len())
-    }
-}
-
-#[cfg(not(feature = "no_std"))]
-impl FromBytes for Vec<u8> {
-    fn from_bytes(buffer: &[u8]) -> IResult<&[u8], Self> {
-        let (buffer, len) = le_u32(buffer)?;
-        let (buffer, bytes) = take(len)(buffer)?;
-
-        Ok((buffer, bytes.to_vec()))
-    }
-}
-
 impl ToBytes for u32 {
     fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
         let mut buffer = Buffin::new(buffer);
@@ -146,6 +101,20 @@ impl ToBytes for u16 {
 impl FromBytes for u16 {
     fn from_bytes(buffer: &[u8]) -> IResult<&[u8], Self> {
         le_u16(buffer)
+    }
+}
+
+impl ToBytes for u8 {
+    fn to_bytes(&self, buffer: &mut [u8]) -> Result<usize> {
+        let mut buffer = Buffin::new(buffer);
+        buffer.add_bytes(&self.to_le_bytes())?;
+        Ok(buffer.len())
+    }
+}
+
+impl FromBytes for u8 {
+    fn from_bytes(buffer: &[u8]) -> IResult<&[u8], Self> {
+        le_u8(buffer)
     }
 }
 
