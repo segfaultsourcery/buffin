@@ -118,9 +118,7 @@ impl FromBytes for u8 {
     }
 }
 
-//
 // ToBytes and FromBytes for slices and vectors. Generalized.
-//
 impl<T> ToBytes for &[T]
 where
     T: ToBytes,
