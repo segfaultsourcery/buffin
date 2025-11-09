@@ -189,7 +189,6 @@ pub fn derive_to_bytes(input: TokenStream) -> TokenStream {
 
                         quote! {
                             Self::#variant_ident { #( #field_idents ),* } => {
-                                // TODO: This should be customizable by `#[tag("blah")]` on a variant.
                                 buffer.add_bytes(#variant_name.as_bytes())?;
                                 #( #field_adds )*
                             }
