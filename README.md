@@ -87,9 +87,9 @@ Here's a simple struct:
 #[derive(ToBytes, FromBytes)]
 struct MyStruct {
     number: u16,
-    bytes: [u8; 8],
+    bytes: Vec<u8>,
     link: String,
-    range: RangeInclusive<u8>
+    range: RangeInclusive<u32>
 }
 ```
 
