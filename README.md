@@ -2,32 +2,34 @@
 
 This crate allows you to do quick and easy (de)serialization of data, originally meant for passing data to and from small embedded applications.
 
+Best used together with [buffin_derive](https://crates.io/crates/buffin_derive).
+
 ## Examples
 
 Here's a simple enum:
 
 ```rust
-    use buffin::Buffin;
-    use buffin_derive::{FromBytes, ToBytes};
+use buffin::Buffin;
+use buffin_derive::{FromBytes, ToBytes};
 
-    #[derive(ToBytes, FromBytes)]
-    enum Message {
-        #[tag("j")]
-        Join {
-            channel: String,
-        },
+#[derive(ToBytes, FromBytes)]
+enum Message {
+    #[tag("j")]
+    Join {
+        channel: String,
+    },
 
-        #[tag("l")]
-        Leave {
-            channel: String,
-        },
+    #[tag("l")]
+    Leave {
+        channel: String,
+    },
 
-        // No tag here, see below.
-        Say {
-            channel: String,
-            message: String,
-        },
-    }
+    // No tag here, see below.
+    Say {
+        channel: String,
+        message: String,
+    },
+}
 ```
 
 Here's what it'll serialize to:
