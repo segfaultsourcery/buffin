@@ -92,13 +92,12 @@ struct MyStruct {
 ```
 
 ```
-#[derive(ToBytes, FromBytes)]
-struct MyStruct {
-    number: u16,
-    bytes: Vec<u8>,
-    text: String,
-    range: RangeInclusive<u32>,
-}
+MyStruct {
+    number: 12,
+    bytes: vec![7, 8, 9],
+    text: "hello".to_string(),
+    range: 5..=22,
+};
 
 becomes
 
